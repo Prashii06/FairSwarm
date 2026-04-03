@@ -79,6 +79,16 @@ CREATE TABLE audit_logs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 7. Token Blocklist Table
+CREATE TABLE token_blocklist (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    token_hash VARCHAR(255) UNIQUE NOT NULL,
+    token_jti VARCHAR(255),
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Triggers for updated_at
 CREATE OR REPLACE FUNCTION update_timestamp()
 RETURNS TRIGGER AS $$
@@ -105,6 +115,13 @@ CREATE INDEX idx_analyses_dataset_id ON analyses(dataset_id);
 CREATE INDEX idx_bias_reports_analysis_id ON bias_reports(analysis_id);
 CREATE INDEX idx_ai_swarm_results_analysis_id ON ai_swarm_results(analysis_id);
 CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX idx_datasets_created_at ON datasets(created_at);
+CREATE INDEX idx_analyses_created_at ON analyses(created_at);
+CREATE INDEX idx_bias_reports_created_at ON bias_reports(created_at);
+CREATE INDEX idx_ai_swarm_results_created_at ON ai_swarm_results(created_at);
+CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX idx_token_blocklist_user_id ON token_blocklist(user_id);
+CREATE INDEX idx_token_blocklist_expires_at ON token_blocklist(expires_at);
 
 -- Row Level Security (RLS)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
@@ -112,6 +129,7 @@ ALTER TABLE datasets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE analyses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bias_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ai_swarm_results ENABLE ROW LEVEL SECURITY;
+ALTER TABLE token_blocklist ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
 CREATE POLICY "Users can view own data" ON users FOR SELECT USING (auth.uid() = id);
@@ -125,5 +143,13 @@ CREATE POLICY "Users can manage own analyses" ON analyses FOR ALL USING (auth.ui
 CREATE POLICY "Users can view own bias reports" ON bias_reports FOR SELECT 
 USING (EXISTS (SELECT 1 FROM analyses WHERE analyses.id = bias_reports.analysis_id AND analyses.user_id = auth.uid()));
 
+CREATE POLICY "Users can manage own bias reports" ON bias_reports FOR ALL
+USING (EXISTS (SELECT 1 FROM analyses WHERE analyses.id = bias_reports.analysis_id AND analyses.user_id = auth.uid()));
+
 CREATE POLICY "Users can view own ai swarm results" ON ai_swarm_results FOR SELECT 
 USING (EXISTS (SELECT 1 FROM analyses WHERE analyses.id = ai_swarm_results.analysis_id AND analyses.user_id = auth.uid()));
+
+CREATE POLICY "Users can manage own ai swarm results" ON ai_swarm_results FOR ALL
+USING (EXISTS (SELECT 1 FROM analyses WHERE analyses.id = ai_swarm_results.analysis_id AND analyses.user_id = auth.uid()));
+
+CREATE POLICY "Users can view own token blocklist" ON token_blocklist FOR SELECT USING (auth.uid() = user_id);

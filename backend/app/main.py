@@ -1,17 +1,16 @@
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException, status
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from contextlib import asynccontextmanager
-from typing import Dict
 
 from .config import settings
+from .core.middleware import InputSanitizationMiddleware, RequestLoggingMiddleware, SecurityHeadersMiddleware
+from .core.rate_limit import limiter
+from .core.realtime import analysis_ws_manager
 from .routers import auth, datasets, analysis, reports, ai_swarm
-
-limiter = Limiter(key_func=get_remote_address, default_limits=[f"{settings.RATE_LIMIT_PER_MINUTE}/minute"])
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -38,6 +37,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.add_middleware(InputSanitizationMiddleware)
+app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
 
 @app.middleware("http")
 async def jwt_auth_middleware(request: Request, call_next):
@@ -71,29 +73,11 @@ app.include_router(ai_swarm.router, prefix="/api/v1/ai", tags=["AI Swarm"])
 async def health_check(request: Request):
     return {"status": "ok", "environment": settings.ENVIRONMENT}
 
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: Dict[str, WebSocket] = {}
-
-    async def connect(self, analysis_id: str, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections[analysis_id] = websocket
-
-    def disconnect(self, analysis_id: str):
-        if analysis_id in self.active_connections:
-            del self.active_connections[analysis_id]
-
-    async def send_personal_message(self, message: dict, analysis_id: str):
-        if analysis_id in self.active_connections:
-            await self.active_connections[analysis_id].send_json(message)
-
-manager = ConnectionManager()
-
 @app.websocket("/ws/analysis/{analysis_id}")
 async def websocket_endpoint(websocket: WebSocket, analysis_id: str):
-    await manager.connect(analysis_id, websocket)
+    await analysis_ws_manager.connect(analysis_id, websocket)
     try:
         while True:
-            data = await websocket.receive_text()
+            await websocket.receive_text()
     except WebSocketDisconnect:
-        manager.disconnect(analysis_id)
+        await analysis_ws_manager.disconnect(analysis_id, websocket)
