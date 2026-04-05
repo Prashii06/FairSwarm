@@ -1,3 +1,7 @@
+import json
+from typing import Any
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -24,5 +28,28 @@ class Settings(BaseSettings):
     CORS_ORIGINS: list[str] = ["http://localhost:3000"]
     CSRF_COOKIE_SECURE: bool = False
     ENVIRONMENT: str = "development"
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, value: Any) -> list[str]:
+        if isinstance(value, list):
+            return [str(item).strip() for item in value if str(item).strip()]
+
+        if isinstance(value, str):
+            raw = value.strip()
+            if not raw:
+                return []
+
+            if raw.startswith("["):
+                try:
+                    parsed = json.loads(raw)
+                    if isinstance(parsed, list):
+                        return [str(item).strip() for item in parsed if str(item).strip()]
+                except json.JSONDecodeError:
+                    pass
+
+            return [item.strip() for item in raw.split(",") if item.strip()]
+
+        raise TypeError("CORS_ORIGINS must be a list or string")
 
 settings = Settings()

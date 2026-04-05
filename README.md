@@ -163,6 +163,8 @@ Workflows in `.github/workflows/`:
 
 ## Deployment Configuration
 
+For full production setup instructions (Vercel + Railway + GitHub secrets), see `DEPLOY_VERCEL_RAILWAY.md`.
+
 ### Frontend (Vercel)
 
 - Config file: `frontend/vercel.json`
