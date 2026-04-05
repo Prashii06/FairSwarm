@@ -28,7 +28,7 @@ export function FairnessMetricsBar({ metrics }: { metrics: MetricResult[] }) {
   }));
 
   return (
-    <Card className="h-[360px] overflow-hidden">
+    <Card className="h-[360px] overflow-hidden" aria-label="Fairness metrics bar chart">
       <p className="mb-3 text-sm uppercase tracking-[0.18em] text-slate-400">Metric vs Threshold</p>
       <ResponsiveContainer width="100%" height="88%">
         <BarChart data={rows} layout="vertical" margin={{ left: 24, right: 20 }}>
@@ -47,6 +47,24 @@ export function FairnessMetricsBar({ metrics }: { metrics: MetricResult[] }) {
           <Bar dataKey="value" fill="#0066FF" radius={[2, 2, 2, 2]} />
         </BarChart>
       </ResponsiveContainer>
+      <table className="sr-only" aria-label="Metric vs threshold table fallback">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Value</th>
+            <th>Threshold</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.metric}>
+              <td>{row.metric}</td>
+              <td>{row.value}</td>
+              <td>{row.threshold}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </Card>
   );
 }

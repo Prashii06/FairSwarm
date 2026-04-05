@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
   { href: "/reports", label: "Reports", icon: FileText },
+  { href: "/documentation", label: "Docs", icon: BarChart3 },
   { href: "/dashboard#upload", label: "Upload", icon: Upload },
   { href: "/dashboard#analysis", label: "Analysis", icon: BarChart3 },
 ];
@@ -28,6 +29,7 @@ export function SidebarNav() {
             <Link
               key={item.href}
               href={item.href}
+              aria-label={`Navigate to ${item.label}`}
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                 active ? "border border-primary bg-card text-white" : "text-slate-300 hover:bg-card"

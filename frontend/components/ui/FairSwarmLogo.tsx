@@ -13,7 +13,7 @@ const sizes = {
 
 export function FairSwarmLogo({ className, size = "md" }: FairSwarmLogoProps) {
   return (
-    <div className={cn("inline-flex items-center gap-3", className)}>
+    <div className={cn("inline-flex items-center gap-3", className)} role="img" aria-label="FairSwarm logo">
       <div
         className={cn(
           "grid place-items-center rounded-md border border-primary bg-surface font-bold tracking-tight text-primary",

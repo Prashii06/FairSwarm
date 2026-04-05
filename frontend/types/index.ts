@@ -174,7 +174,37 @@ export interface SwarmStatusResponse {
 export interface ReportListItem {
   id: string;
   analysis_id: string;
+  project_name: string;
+  dataset_id: string;
+  dataset_name: string;
   overall_score: number;
+  fairness_grade: FairnessGrade;
   sensitive_attribute: string;
   created_at: string;
+}
+
+export interface ReportListResponse {
+  items: ReportListItem[];
+  page: number;
+  page_size: number;
+  total: number;
+}
+
+export interface ReportFilters {
+  start_date?: string;
+  end_date?: string;
+  grade?: "A" | "B" | "C" | "D" | "E" | "F";
+  dataset_id?: string;
+  sort?: "newest" | "worst_bias_score" | "best_bias_score";
+  page?: number;
+  page_size?: number;
+}
+
+export interface ReportShareResponse {
+  share_url: string;
+  expires_at: string;
+}
+
+export interface BulkReportDownloadRequest {
+  analysis_ids: string[];
 }

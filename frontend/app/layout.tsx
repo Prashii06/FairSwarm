@@ -53,8 +53,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${spaceGrotesk.variable} min-h-screen bg-background font-sans antialiased`}>
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <AppProviders>
-          <main className="min-h-screen">{children}</main>
+          <main id="main-content" className="min-h-screen" tabIndex={-1}>
+            {children}
+          </main>
         </AppProviders>
       </body>
     </html>

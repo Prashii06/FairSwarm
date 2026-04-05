@@ -9,7 +9,7 @@ type MetricTableProps = {
 export function MetricTable({ metrics }: MetricTableProps) {
   return (
     <Card className="overflow-x-auto">
-      <table className="w-full text-left text-sm text-slate-300">
+      <table className="w-full text-left text-sm text-slate-300" aria-label="Fairness metric details table">
         <thead>
           <tr className="border-b border-border text-xs uppercase tracking-wide text-slate-400">
             <th className="py-3">Metric</th>

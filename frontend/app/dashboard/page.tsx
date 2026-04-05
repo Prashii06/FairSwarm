@@ -220,14 +220,9 @@ export default function DashboardPage() {
                   <Link href="/reports" className="flex items-center gap-2 rounded border border-border bg-surface p-2">
                     <FileText className="h-4 w-4" /> View Reports
                   </Link>
-                  <a
-                    href="http://localhost:8000/docs"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2 rounded border border-border bg-surface p-2"
-                  >
+                  <Link href="/documentation" className="flex items-center gap-2 rounded border border-border bg-surface p-2">
                     <BookOpenText className="h-4 w-4" /> Documentation
-                  </a>
+                  </Link>
                 </div>
               </Card>
 

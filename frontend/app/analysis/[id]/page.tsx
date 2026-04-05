@@ -1,24 +1,51 @@
 "use client";
 
-import { CheckCircle2, Clock3, Download, Loader2, Sparkles } from "lucide-react";
+import { CheckCircle2, Clock3, Download, Sparkles } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 
 import { MobileBottomNav } from "@/components/dashboard/MobileBottomNav";
 import { SidebarNav } from "@/components/dashboard/SidebarNav";
 import { useToast } from "@/components/providers/ToastProvider";
+import { CompareAnalyses } from "@/components/analysis/CompareAnalyses";
 import { MetricTable } from "@/components/analysis/metric-table";
-import { BiasGauge } from "@/components/charts/BiasGauge";
-import { DisparateImpactChart } from "@/components/charts/DisparateImpactChart";
-import { FairnessMetricsBar } from "@/components/charts/FairnessMetricsBar";
-import { IntersectionalHeatmap } from "@/components/charts/IntersectionalHeatmap";
 import { SwarmAgentCards } from "@/components/charts/SwarmAgentCards";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress";
 import { downloadReport, getAnalysis, normalizeApiError, swarmApi } from "@/lib/api";
 import type { AnalysisDetailResponse, FairnessGrade, MetricResult, SwarmAgentResult } from "@/types";
+
+const BiasGauge = dynamic(() => import("@/components/charts/BiasGauge").then((mod) => mod.BiasGauge), {
+  ssr: false,
+  loading: () => <div className="fs-skeleton h-[320px] w-full" aria-hidden />,
+});
+
+const FairnessMetricsBar = dynamic(
+  () => import("@/components/charts/FairnessMetricsBar").then((mod) => mod.FairnessMetricsBar),
+  {
+    ssr: false,
+    loading: () => <div className="fs-skeleton h-[360px] w-full" aria-hidden />,
+  }
+);
+
+const IntersectionalHeatmap = dynamic(
+  () => import("@/components/charts/IntersectionalHeatmap").then((mod) => mod.IntersectionalHeatmap),
+  {
+    ssr: false,
+    loading: () => <div className="fs-skeleton h-[300px] w-full" aria-hidden />,
+  }
+);
+
+const DisparateImpactChart = dynamic(
+  () => import("@/components/charts/DisparateImpactChart").then((mod) => mod.DisparateImpactChart),
+  {
+    ssr: false,
+    loading: () => <div className="fs-skeleton h-[340px] w-full" aria-hidden />,
+  }
+);
 
 type ProgressState = {
   status: string;
@@ -59,6 +86,7 @@ export default function AnalysisDetailPage() {
     detail: "Waiting for analysis updates",
   });
   const [estimatedMinutes, setEstimatedMinutes] = useState<number>(6);
+  const [timedOut, setTimedOut] = useState(false);
 
   const startedAtRef = useRef<number>(Date.now());
 
@@ -113,6 +141,22 @@ export default function AnalysisDetailPage() {
   const report = detail?.bias_report;
   const swarmConsensus = report?.swarm_consensus;
   const swarmAgents = (swarmConsensus?.agent_results as SwarmAgentResult[] | undefined) ?? [];
+  const allAgentsFailed = Boolean(
+    swarmConsensus && swarmConsensus.agents_failed >= 4 && swarmConsensus.agents_completed === 0
+  );
+
+  useEffect(() => {
+    if (analysisStatus === "completed" || analysisStatus === "failed") {
+      setTimedOut(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setTimedOut(true);
+    }, 5 * 60 * 1000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [analysisStatus]);
 
   const flatMetrics = useMemo<MetricResult[]>(() => {
     if (!report?.fairness_metrics?.metrics_by_sensitive_attribute) return [];
@@ -158,8 +202,12 @@ export default function AnalysisDetailPage() {
 
   if (analysisQuery.isLoading) {
     return (
-      <div className="grid min-h-screen place-items-center bg-background">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <div className="mx-auto flex min-h-screen w-full max-w-5xl items-center px-4">
+        <div className="w-full space-y-3">
+          <div className="fs-skeleton h-8 w-60" />
+          <div className="fs-skeleton h-36 w-full" />
+          <div className="fs-skeleton h-72 w-full" />
+        </div>
       </div>
     );
   }
@@ -198,11 +246,31 @@ export default function AnalysisDetailPage() {
                   <p className="fs-section-title">Progress</p>
                   <span className="text-sm text-slate-400">{Math.round(progressValue)}%</span>
                 </div>
-                <ProgressBar value={progressValue} className="h-3" />
+                <ProgressBar value={progressValue} className="h-3" label="Analysis progress" />
                 <p className="text-sm text-slate-200">{liveProgress.detail || stepLabel(progressValue)}</p>
+                <p className="sr-only" role="status" aria-live="polite">
+                  Analysis progress {Math.round(progressValue)} percent. {liveProgress.detail}
+                </p>
                 <p className="text-xs text-slate-400">
                   <Clock3 className="mr-1 inline h-3 w-3" /> Estimated time remaining: ~{estimatedMinutes} min
                 </p>
+                {timedOut ? (
+                  <div className="rounded border border-warning bg-surface p-3 text-sm text-warning">
+                    Analysis is taking longer than 5 minutes. You can retry status checks.
+                    <div className="mt-2">
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          void analysisQuery.refetch();
+                          void swarmStatusQuery.refetch();
+                        }}
+                        aria-label="Retry analysis status check"
+                      >
+                        Retry status
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
               </Card>
 
               <Card>
@@ -244,6 +312,12 @@ export default function AnalysisDetailPage() {
             </section>
           ) : (
             <section className="space-y-6">
+              {allAgentsFailed ? (
+                <Card className="border-warning p-4 text-sm text-warning" role="status" aria-live="polite">
+                  AI analysis unavailable: all swarm agents failed in this run. Showing metric-based results only.
+                </Card>
+              ) : null}
+
               <div className="grid gap-5 xl:grid-cols-[1.1fr_1fr]">
                 <BiasGauge score={report?.overall_score ?? 0} />
 
@@ -312,6 +386,8 @@ export default function AnalysisDetailPage() {
                   })}
                 </div>
               </Card>
+
+              <CompareAnalyses defaultLeftId={analysisId} />
             </section>
           )}
         </div>

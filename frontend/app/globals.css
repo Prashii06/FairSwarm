@@ -30,6 +30,29 @@
     background-color: rgb(var(--background));
   }
 
+  :focus-visible {
+    outline: 2px solid #0066ff;
+    outline-offset: 2px;
+  }
+
+  .skip-link {
+    position: fixed;
+    left: 0.75rem;
+    top: 0.75rem;
+    transform: translateY(-180%);
+    background-color: rgb(var(--card));
+    color: rgb(var(--foreground));
+    border: 1px solid rgb(var(--primary));
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    z-index: 120;
+    transition: transform 180ms ease;
+  }
+
+  .skip-link:focus-visible {
+    transform: translateY(0);
+  }
+
   a {
     @apply text-secondary transition-colors;
   }
@@ -50,5 +73,20 @@
 
   .fs-card {
     @apply rounded-xl border border-border bg-card;
+  }
+
+  .fs-skeleton {
+    @apply animate-pulse rounded-md bg-slate-700/60;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
   }
 }

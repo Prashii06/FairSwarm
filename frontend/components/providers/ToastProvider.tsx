@@ -47,6 +47,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <ToastPrimitive.Root
             key={item.id}
             open
+            role="status"
+            aria-live={item.variant === "error" ? "assertive" : "polite"}
             className={
               item.variant === "error"
                 ? "group pointer-events-auto rounded-lg border border-danger bg-card px-4 py-3 shadow-lg"
@@ -65,7 +67,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             ) : null}
           </ToastPrimitive.Root>
         ))}
-        <ToastPrimitive.Viewport className="fixed bottom-4 right-4 z-[100] flex w-80 flex-col gap-2 outline-none" />
+        <ToastPrimitive.Viewport aria-label="Notifications" className="fixed bottom-4 right-4 z-[100] flex w-80 flex-col gap-2 outline-none" />
       </ToastPrimitive.Provider>
     </ToastContext.Provider>
   );

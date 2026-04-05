@@ -4,10 +4,14 @@ import type {
   AnalysisDetailResponse,
   AnalysisRecord,
   AnalysisStartRequest,
+  BulkReportDownloadRequest,
   DatasetRecord,
   DatasetUploadResponse,
   LoginRequest,
+  ReportFilters,
   ReportListItem,
+  ReportListResponse,
+  ReportShareResponse,
   RegisterRequest,
   SwarmAnalyzeRequest,
   SwarmConsensusResult,
@@ -18,6 +22,11 @@ const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1",
   timeout: 30_000,
 });
+
+function notifySessionExpired() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent("fairswarm:session-expired"));
+}
 
 api.interceptors.request.use((config) => {
   if (process.env.NODE_ENV === "development") {
@@ -58,10 +67,7 @@ api.interceptors.response.use(
       localStorage.removeItem("fairswarm_access_token");
       localStorage.removeItem("fairswarm_csrf_token");
       localStorage.removeItem("fairswarm_user");
-      const target = `/login?reason=session-expired`;
-      if (window.location.pathname !== "/login") {
-        window.location.assign(target);
-      }
+      notifySessionExpired();
     }
 
     return Promise.reject(error);
@@ -111,9 +117,14 @@ export const swarmApi = {
 };
 
 export const reportsApi = {
-  list: () => api.get<{ items: ReportListItem[] }>("/reports"),
+  list: (params?: ReportFilters) => api.get<ReportListResponse>("/reports", { params }),
   json: (analysisId: string) => api.get(`/reports/${analysisId}/json`),
   pdf: (analysisId: string) => api.get<Blob>(`/reports/${analysisId}/pdf`, { responseType: "blob" }),
+  bulkDownload: (payload: BulkReportDownloadRequest) =>
+    api.post<Blob>("/reports/bulk-download", payload, { responseType: "blob" }),
+  share: (analysisId: string) => api.post<ReportShareResponse>("/reports/share", { analysis_id: analysisId }),
+  publicJson: (token: string) => api.get(`/reports/public/${token}`),
+  publicPdf: (token: string) => api.get<Blob>(`/reports/public/${token}/pdf`, { responseType: "blob" }),
 };
 
 export async function uploadDataset(formData: FormData): Promise<DatasetUploadResponse> {

@@ -1,6 +1,5 @@
 "use client";
 
-import * as d3 from "d3";
 import { useEffect, useMemo, useRef } from "react";
 
 import { Card } from "@/components/ui/card";
@@ -33,62 +32,92 @@ export function IntersectionalHeatmap({ data }: IntersectionalHeatmapProps) {
   useEffect(() => {
     if (!ref.current) return;
 
-    const width = 700;
-    const rowHeight = 40;
-    const height = Math.max(120, points.length * rowHeight + 50);
+    let isMounted = true;
+    const renderChart = async () => {
+      const d3 = await import("d3");
+      if (!isMounted || !ref.current) return;
 
-    const svg = d3.select(ref.current);
-    svg.selectAll("*").remove();
-    svg.attr("viewBox", `0 0 ${width} ${height}`);
+      const width = 700;
+      const rowHeight = 40;
+      const height = Math.max(120, points.length * rowHeight + 50);
 
-    const maxDisparity = d3.max(points, (d) => d.disparity) ?? 0.1;
-    const colorScale = d3
-      .scaleLinear<string>()
-      .domain([0, maxDisparity / 2, maxDisparity])
-      .range(["#00FF88", "#FFAA00", "#FF3B3B"]);
+      const svg = d3.select(ref.current);
+      svg.selectAll("*").remove();
+      svg.attr("viewBox", `0 0 ${width} ${height}`);
 
-    const g = svg.append("g").attr("transform", "translate(16,16)");
+      const maxDisparity = d3.max(points, (d) => d.disparity) ?? 0.1;
+      const colorScale = d3
+        .scaleLinear<string>()
+        .domain([0, maxDisparity / 2, maxDisparity])
+        .range(["#00FF88", "#FFAA00", "#FF3B3B"]);
 
-    g.selectAll("rect")
-      .data(points)
-      .enter()
-      .append("rect")
-      .attr("x", 220)
-      .attr("y", (_d, i) => i * rowHeight)
-      .attr("width", 420)
-      .attr("height", rowHeight - 8)
-      .attr("rx", 4)
-      .attr("fill", (d) => colorScale(d.disparity));
+      const g = svg.append("g").attr("transform", "translate(16,16)");
 
-    g.selectAll("text.label")
-      .data(points)
-      .enter()
-      .append("text")
-      .attr("class", "label")
-      .attr("x", 0)
-      .attr("y", (_d, i) => i * rowHeight + 20)
-      .attr("fill", "#E2E8F0")
-      .style("font-size", "12px")
-      .text((d) => d.label);
+      g.selectAll("rect")
+        .data(points)
+        .enter()
+        .append("rect")
+        .attr("x", 220)
+        .attr("y", (_d, i) => i * rowHeight)
+        .attr("width", 420)
+        .attr("height", rowHeight - 8)
+        .attr("rx", 4)
+        .attr("fill", (d) => colorScale(d.disparity));
 
-    g.selectAll("text.value")
-      .data(points)
-      .enter()
-      .append("text")
-      .attr("class", "value")
-      .attr("x", 648)
-      .attr("y", (_d, i) => i * rowHeight + 20)
-      .attr("fill", "#0B1020")
-      .style("font-size", "11px")
-      .style("font-weight", "700")
-      .style("text-anchor", "end")
-      .text((d) => d.disparity.toFixed(3));
+      g.selectAll("text.label")
+        .data(points)
+        .enter()
+        .append("text")
+        .attr("class", "label")
+        .attr("x", 0)
+        .attr("y", (_d, i) => i * rowHeight + 20)
+        .attr("fill", "#E2E8F0")
+        .style("font-size", "12px")
+        .text((d) => d.label);
+
+      g.selectAll("text.value")
+        .data(points)
+        .enter()
+        .append("text")
+        .attr("class", "value")
+        .attr("x", 648)
+        .attr("y", (_d, i) => i * rowHeight + 20)
+        .attr("fill", "#0B1020")
+        .style("font-size", "11px")
+        .style("font-weight", "700")
+        .style("text-anchor", "end")
+        .text((d) => d.disparity.toFixed(3));
+    };
+
+    void renderChart();
+
+    return () => {
+      isMounted = false;
+    };
   }, [points]);
 
   return (
-    <Card className="overflow-x-auto">
+    <Card className="overflow-x-auto" aria-label="Intersectional bias heatmap">
       <p className="mb-4 text-sm uppercase tracking-[0.18em] text-slate-400">Intersectional Bias Heatmap</p>
-      <svg ref={ref} className="min-w-[680px]" />
+      <svg ref={ref} className="min-w-[680px]" role="img" aria-label="Intersectional disparity heatmap visualization" />
+      <table className="sr-only" aria-label="Intersectional disparity table fallback">
+        <thead>
+          <tr>
+            <th>Combination</th>
+            <th>Disparity</th>
+            <th>Severity</th>
+          </tr>
+        </thead>
+        <tbody>
+          {points.map((point) => (
+            <tr key={point.label}>
+              <td>{point.label}</td>
+              <td>{point.disparity.toFixed(3)}</td>
+              <td>{point.severity}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </Card>
   );
 }

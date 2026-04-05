@@ -20,7 +20,7 @@ type DisparateImpactRow = {
 
 export function DisparateImpactChart({ data }: { data: DisparateImpactRow[] }) {
   return (
-    <Card className="h-[340px]">
+    <Card className="h-[340px]" aria-label="Outcomes by group chart">
       <p className="mb-3 text-sm uppercase tracking-[0.18em] text-slate-400">Outcomes by Group</p>
       <ResponsiveContainer width="100%" height="86%">
         <BarChart data={data}>
@@ -39,6 +39,24 @@ export function DisparateImpactChart({ data }: { data: DisparateImpactRow[] }) {
           <Bar dataKey="unfavorable" name="Unfavorable" fill="#FF3B3B" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
+      <table className="sr-only" aria-label="Outcomes by group table fallback">
+        <thead>
+          <tr>
+            <th>Group</th>
+            <th>Favorable</th>
+            <th>Unfavorable</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row) => (
+            <tr key={row.group}>
+              <td>{row.group}</td>
+              <td>{row.favorable}</td>
+              <td>{row.unfavorable}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </Card>
   );
 }

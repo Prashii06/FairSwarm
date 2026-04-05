@@ -32,7 +32,13 @@ export function BiasGauge({ score, label = "FairSwarm Score" }: BiasGaugeProps) 
   return (
     <div className="fs-card flex flex-col items-center gap-4 p-6">
       <p className="fs-section-title">{label}</p>
-      <svg width="220" height="220" viewBox="0 0 220 220" role="img" aria-label={`Score ${clamped}`}>
+      <svg
+        width="220"
+        height="220"
+        viewBox="0 0 220 220"
+        role="img"
+        aria-label={`Fairness score: ${Math.round(clamped)} out of 100. Grade: ${grade}`}
+      >
         <circle cx="110" cy="110" r={radius} fill="none" stroke="#1A3050" strokeWidth="14" />
         <motion.circle
           cx="110"
@@ -55,6 +61,20 @@ export function BiasGauge({ score, label = "FairSwarm Score" }: BiasGaugeProps) 
           GRADE {grade}
         </text>
       </svg>
+      <table className="sr-only" aria-label="Fairness score data table fallback for screen readers">
+        <thead>
+          <tr>
+            <th>Score</th>
+            <th>Grade</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{Math.round(clamped)}</td>
+            <td>{grade}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 }
