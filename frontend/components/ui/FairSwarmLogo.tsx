@@ -1,8 +1,11 @@
+import Link from "next/link";
+
 import { cn } from "@/lib/utils";
 
 type FairSwarmLogoProps = {
   className?: string;
   size?: "sm" | "md" | "lg";
+  href?: string;
 };
 
 const sizes = {
@@ -11,9 +14,17 @@ const sizes = {
   lg: "h-14 w-14 text-lg",
 };
 
-export function FairSwarmLogo({ className, size = "md" }: FairSwarmLogoProps) {
+export function FairSwarmLogo({ className, size = "md", href = "/" }: FairSwarmLogoProps) {
   return (
-    <div className={cn("inline-flex items-center gap-3", className)} role="img" aria-label="FairSwarm logo">
+    <Link
+      href={href}
+      className={cn(
+        "inline-flex items-center gap-3 transition-transform duration-200 hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0066FF]",
+        className
+      )}
+      role="img"
+      aria-label="FairSwarm home"
+    >
       <div
         className={cn(
           "grid place-items-center rounded-md border border-primary bg-surface font-bold tracking-tight text-primary",
@@ -26,6 +37,6 @@ export function FairSwarmLogo({ className, size = "md" }: FairSwarmLogoProps) {
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-secondary">FairSwarm</p>
         <p className="text-xs text-slate-400">Bias Intelligence Platform</p>
       </div>
-    </div>
+    </Link>
   );
 }
