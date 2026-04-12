@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="preview.png" alt="FairSwarm Landing Page" width="100%" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
+  <img src="https://cdn.phototourl.com/free/2026-04-12-1e967b25-f839-442f-9ab9-86479e9b917a.png" alt="FairSwarm Landing Page" width="100%" style="border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
 
   <h1 style="margin-top: 20px;">⚖️ FairSwarm</h1>
   <h3><i>Detect AI Bias Before It Harms Real People.</i></h3>
