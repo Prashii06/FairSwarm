@@ -202,10 +202,10 @@ export function CompareAnalyses({ defaultLeftId }: CompareAnalysesProps) {
                 </tr>
               </thead>
               <tbody>
-                {deltaRows.map((row) => {
-                  const improved = row.delta >= 0;
-                  return (
-                    <tr key={row.metric} className="border-t border-border/70">
+                  {deltaRows.map((row, index) => {
+                    const improved = row.delta >= 0;
+                    return (
+                      <tr key={`${row.metric}-${index}`} className="border-t border-border/70">
                       <td className="py-2 text-slate-200">{sanitizeText(row.metric)}</td>
                       <td className="py-2">{row.left.toFixed(4)}</td>
                       <td className="py-2">{row.right.toFixed(4)}</td>

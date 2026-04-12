@@ -21,8 +21,8 @@ export function MetricTable({ metrics }: MetricTableProps) {
           </tr>
         </thead>
         <tbody>
-          {metrics.map((metric) => (
-            <tr key={metric.metric_name} className="border-b border-border/60">
+          {metrics.map((metric, index) => (
+            <tr key={`${metric.metric_name}-${index}`} className="border-b border-border/60"> 
               <td className="py-3 font-medium text-slate-200">{metric.metric_name}</td>
               <td className="py-3">{metric.value.toFixed(4)}</td>
               <td className="py-3">[{metric.threshold_min}, {metric.threshold_max}]</td>

@@ -21,8 +21,8 @@ type ChartRow = {
 };
 
 export function FairnessMetricsBar({ metrics }: { metrics: MetricResult[] }) {
-  const rows: ChartRow[] = metrics.map((metric) => ({
-    metric: metric.metric_name,
+  const rows: ChartRow[] = metrics.map((metric, index) => ({
+    metric: `${metric.metric_name}${'\u200B'.repeat(index)}`,
     value: Number(metric.value.toFixed(4)),
     threshold: Number(metric.threshold_max.toFixed(4)),
   }));
@@ -56,8 +56,8 @@ export function FairnessMetricsBar({ metrics }: { metrics: MetricResult[] }) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={row.metric}>
+          {rows.map((row, index) => (
+            <tr key={`${row.metric}-${index}`}>
               <td>{row.metric}</td>
               <td>{row.value}</td>
               <td>{row.threshold}</td>
