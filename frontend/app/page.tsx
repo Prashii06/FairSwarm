@@ -1847,7 +1847,7 @@ POST /ai/triage          Run swarm analysis`}
                 {
                   Icon: Mail,
                   title: "Email",
-                  value: "ankitkr.ak07@gmail.com",
+                  value: "ankitkr.ak007@gmail.com",
                   action: copyEmail,
                   kind: "button" as const,
                 },
