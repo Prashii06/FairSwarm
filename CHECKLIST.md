@@ -29,16 +29,16 @@
 
 ## CI/CD and Deployment
 
-- [ ] Confirm GitHub Actions secrets are set for Vercel and Railway.
+- [ ] Confirm GitHub Actions secrets are set for Vercel and Render.
 - [ ] Confirm `ci.yml` passes on latest commit.
 - [ ] Confirm `deploy.yml` smoke test URLs are correct.
 - [ ] Deploy frontend to Vercel.
-- [ ] Deploy backend to Railway.
+- [ ] Deploy backend to Render.
 - [ ] Verify production health endpoint: `/health`.
 
 ## Demo Readiness
 
 - [ ] Prepare 3-minute walkthrough path (login -> upload -> analysis -> report).
-- [ ] Keep backup local run command ready: `docker compose up --build`.
+- [ ] Keep backup local run command ready: `npm run dev` and `uvicorn app.main:app --reload`.
 - [ ] Keep fallback static screenshots of reports in case of network instability.
 - [ ] Verify judge-visible features load in a clean incognito session.

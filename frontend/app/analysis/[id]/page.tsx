@@ -76,9 +76,7 @@ function difficultyFromSeverity(severity: string): "easy" | "moderate" | "comple
   return "complex";
 }
 
-export default function AnalysisDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const analysisId = id;
+function AnalysisDetailContent({ analysisId }: { analysisId: string }) {
   const { notify } = useToast();
 
   const [liveProgress, setLiveProgress] = useState<ProgressState>({
@@ -89,7 +87,7 @@ export default function AnalysisDetailPage() {
   const [estimatedMinutes, setEstimatedMinutes] = useState<number>(6);
   const [timedOut, setTimedOut] = useState(false);
 
-  const startedAtRef = useRef<number>(Date.now());
+  const startedAtRef = useRef<number>(0);
 
   const analysisQuery = useQuery({
     queryKey: ["analysis-detail", analysisId],
@@ -108,6 +106,8 @@ export default function AnalysisDetailPage() {
   });
 
   useEffect(() => {
+    startedAtRef.current = Date.now();
+
     const wsBase = process.env.NEXT_PUBLIC_WS_BASE_URL ?? "ws://localhost:8000";
     const socket = new WebSocket(`${wsBase}/ws/analysis/${analysisId}`);
 
@@ -147,10 +147,7 @@ export default function AnalysisDetailPage() {
   );
 
   useEffect(() => {
-    if (analysisStatus === "completed" || analysisStatus === "failed") {
-      setTimedOut(false);
-      return;
-    }
+    if (analysisStatus === "completed" || analysisStatus === "failed") return;
 
     const timeoutId = window.setTimeout(() => {
       setTimedOut(true);
@@ -399,4 +396,9 @@ export default function AnalysisDetailPage() {
       <MobileBottomNav />
     </div>
   );
+}
+
+export default function AnalysisDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  return <AnalysisDetailContent key={id} analysisId={id} />;
 }

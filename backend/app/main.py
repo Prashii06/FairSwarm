@@ -69,7 +69,6 @@ app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
 app.include_router(ai_swarm.router, prefix="/api/v1/ai", tags=["AI Swarm"])
 
 @app.get("/health", tags=["Health"])
-@limiter.limit("5/minute")
 async def health_check(request: Request):
     return {"status": "ok", "environment": settings.ENVIRONMENT}
 

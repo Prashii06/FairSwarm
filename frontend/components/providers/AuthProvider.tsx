@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { isAxiosError } from "axios";
 import type { User } from "@supabase/supabase-js";
 
 import { authApi } from "@/lib/api";
@@ -34,30 +35,28 @@ const USER_KEY = "fairswarm_user";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    const storedUser = window.localStorage.getItem(USER_KEY);
+    if (!storedUser) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(storedUser) as UserProfile;
+    } catch {
+      window.localStorage.removeItem(USER_KEY);
+      return null;
+    }
+  });
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [csrfToken, setCsrfToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      setIsLoading(false);
-      return;
-    }
-
-    const storedUser = localStorage.getItem(USER_KEY);
-
-    setAccessToken(null);
-    setCsrfToken(null);
-
-    if (storedUser) {
-      try {
-        setProfile(JSON.parse(storedUser) as UserProfile);
-      } catch {
-        localStorage.removeItem(USER_KEY);
-      }
-    }
-
     let subscription: { unsubscribe: () => void } | undefined;
 
     try {
@@ -84,6 +83,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.setItem(USER_KEY, JSON.stringify(user));
         }
       })
+      .catch((error: unknown) => {
+        if (typeof window !== "undefined" && isAxiosError(error) && error.response?.status === 401) {
+          setAccessToken(null);
+          setCsrfToken(null);
+          setProfile(null);
+          localStorage.removeItem(USER_KEY);
+        }
+      })
       .finally(() => setIsLoading(false));
 
     return () => {
@@ -96,8 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     csrfToken?: string;
     user?: UserProfile | null;
   }) => {
-    setAccessToken(null);
-    setCsrfToken(null);
+    setAccessToken(payload.accessToken ?? null);
+    setCsrfToken(payload.csrfToken ?? null);
 
     if (payload.user) {
       setProfile(payload.user);

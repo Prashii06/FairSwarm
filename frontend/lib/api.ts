@@ -1,4 +1,4 @@
-import axios, { type AxiosError } from "axios";
+import axios, { AxiosHeaders, type AxiosError, type AxiosRequestConfig } from "axios";
 
 import type {
   AnalysisDetailResponse,
@@ -24,6 +24,17 @@ const api = axios.create({
   withCredentials: true,
 });
 
+type SessionAwareRequestConfig = AxiosRequestConfig & {
+  skipSessionExpiredNotification?: boolean;
+};
+
+function withSessionExpirySuppressed(config?: AxiosRequestConfig): SessionAwareRequestConfig {
+  return {
+    ...(config ?? {}),
+    skipSessionExpiredNotification: true,
+  };
+}
+
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
   const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -44,9 +55,14 @@ api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const method = config.method?.toUpperCase() ?? "GET";
     if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-      const csrfToken = readCookie("fairswarm_csrf_token");
+      const csrfToken = readCookie("csrf_token");
       if (csrfToken) {
-        config.headers["x-csrf-token"] = csrfToken;
+        if (config.headers instanceof AxiosHeaders) {
+          config.headers.set("x-csrf-token", csrfToken);
+        } else {
+          config.headers = AxiosHeaders.from(config.headers);
+          config.headers.set("x-csrf-token", csrfToken);
+        }
       }
     }
   }
@@ -70,7 +86,12 @@ api.interceptors.response.use(
       console.error("[api:error]", error.config?.url, error.response?.status);
     }
 
-    if (typeof window !== "undefined" && error.response?.status === 401) {
+    const requestConfig = error.config as SessionAwareRequestConfig | undefined;
+    if (
+      typeof window !== "undefined" &&
+      error.response?.status === 401 &&
+      !requestConfig?.skipSessionExpiredNotification
+    ) {
       notifySessionExpired();
     }
 
@@ -94,11 +115,12 @@ export function normalizeApiError(error: unknown): string {
 }
 
 export const authApi = {
-  register: (payload: RegisterRequest) => api.post("/auth/register", payload),
-  login: (payload: LoginRequest) => api.post("/auth/login", payload),
-  me: () => api.get("/auth/me"),
-  refresh: (refreshToken: string) => api.post("/auth/refresh", { refresh_token: refreshToken }),
-  logout: () => api.post("/auth/logout"),
+  register: (payload: RegisterRequest) => api.post("/auth/register", payload, withSessionExpirySuppressed()),
+  login: (payload: LoginRequest) => api.post("/auth/login", payload, withSessionExpirySuppressed()),
+  me: () => api.get("/auth/me", withSessionExpirySuppressed()),
+  refresh: (refreshToken: string) =>
+    api.post("/auth/refresh", { refresh_token: refreshToken }, withSessionExpirySuppressed()),
+  logout: () => api.post("/auth/logout", undefined, withSessionExpirySuppressed()),
 };
 
 export const datasetsApi = {
@@ -131,8 +153,9 @@ export const reportsApi = {
   bulkDownload: (payload: BulkReportDownloadRequest) =>
     api.post<Blob>("/reports/bulk-download", payload, { responseType: "blob" }),
   share: (analysisId: string) => api.post<ReportShareResponse>("/reports/share", { analysis_id: analysisId }),
-  publicJson: (token: string) => api.get(`/reports/public/${token}`),
-  publicPdf: (token: string) => api.get<Blob>(`/reports/public/${token}/pdf`, { responseType: "blob" }),
+  publicJson: (token: string) => api.get(`/reports/public/${token}`, withSessionExpirySuppressed()),
+  publicPdf: (token: string) =>
+    api.get<Blob>(`/reports/public/${token}/pdf`, withSessionExpirySuppressed({ responseType: "blob" })),
 };
 
 export async function uploadDataset(formData: FormData): Promise<DatasetUploadResponse> {

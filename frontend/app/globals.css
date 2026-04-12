@@ -78,6 +78,28 @@
   .fs-skeleton {
     @apply animate-pulse rounded-md bg-slate-700/60;
   }
+
+  .route-loading-bar {
+    transform-origin: left center;
+    animation: route-loading 320ms ease-out forwards;
+  }
+}
+
+@keyframes route-loading {
+  0% {
+    transform: scaleX(0);
+    opacity: 1;
+  }
+
+  70% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

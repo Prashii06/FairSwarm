@@ -113,6 +113,8 @@ temp/
 # Project-specific generated files
 # -----------------------------
 backend/demo_data/*.csv
+backend/coverage.xml
+**/*-out.txt
 
 # -----------------------------
 # OS / IDE

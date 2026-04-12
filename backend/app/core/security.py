@@ -15,7 +15,7 @@ from uuid import uuid4
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from pydantic import BaseModel
 
 from ..config import settings
@@ -23,7 +23,6 @@ from .database import extract_single, get_supabase_client
 
 logger = logging.getLogger("fairswarm.security")
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 UPLOADS_PER_DAY_LIMIT = 50
@@ -40,11 +39,16 @@ class TokenData(BaseModel):
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        hashed_bytes = hashed_password.encode("utf-8") if isinstance(hashed_password, str) else hashed_password
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_bytes)
+    except Exception:
+        return False
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode("utf-8"), salt).decode("ascii")
 
 
 def hash_token(token: str) -> str:

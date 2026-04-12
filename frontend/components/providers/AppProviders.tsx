@@ -22,22 +22,11 @@ const queryClient = new QueryClient({
 
 function GlobalRouteLoading() {
   const pathname = usePathname();
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    setIsVisible(true);
-    const timer = window.setTimeout(() => setIsVisible(false), 320);
-    return () => window.clearTimeout(timer);
-  }, [pathname]);
 
   return (
-    <div
-      className={
-        isVisible
-          ? "pointer-events-none fixed left-0 top-0 z-[110] h-0.5 w-full bg-primary opacity-100 transition-opacity"
-          : "pointer-events-none fixed left-0 top-0 z-[110] h-0.5 w-full bg-primary opacity-0 transition-opacity"
-      }
-    />
+    <div className="pointer-events-none fixed left-0 top-0 z-[110] h-0.5 w-full overflow-hidden">
+      <div key={pathname} className="route-loading-bar h-full w-full bg-primary" />
+    </div>
   );
 }
 

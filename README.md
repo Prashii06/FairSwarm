@@ -24,7 +24,7 @@ FairSwarm is a swarm-intelligence platform for AI bias detection. It runs multip
 - Backend: FastAPI, Python 3.11, Pydantic, Supabase SDK.
 - Data/Storage: Supabase Postgres + Supabase Storage.
 - Fairness: AIF360 + Fairlearn.
-- CI/CD: GitHub Actions, Vercel (frontend), Railway (backend).
+- CI/CD: GitHub Actions, Vercel (frontend), Render (backend).
 
 ## Security Hardening Implemented
 
@@ -159,11 +159,11 @@ npm run lint
 Workflows in `.github/workflows/`:
 
 - `ci.yml`: backend tests/coverage + lint/type checks + frontend build/lint.
-- `deploy.yml`: deploy frontend to Vercel, backend to Railway, run smoke tests.
+- `deploy.yml`: deploy frontend to Vercel, backend to Render, run smoke tests.
 
 ## Deployment Configuration
 
-For full production setup instructions (Vercel + Railway + GitHub secrets), see `DEPLOY_VERCEL_RAILWAY.md`.
+For full production setup instructions (Vercel + Render + GitHub secrets), see `DEPLOY_VERCEL_RENDER.md`.
 
 ### Frontend (Vercel)
 
@@ -176,16 +176,15 @@ Required secrets for deploy workflow:
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
 
-### Backend (Railway)
+### Backend (Render)
 
-- Config file: `backend/railway.json`
+- Config files: `render.yaml` and `backend/Dockerfile`
 - Dockerized deployment with healthcheck on `/health`.
 
 Required secrets for deploy workflow:
 
-- `RAILWAY_TOKEN`
-- `RAILWAY_PROJECT_ID`
-- `RAILWAY_SERVICE_ID`
+- `RENDER_API_KEY`
+- `RENDER_SERVICE_ID`
 
 Optional smoke-test/deploy notification secrets:
 

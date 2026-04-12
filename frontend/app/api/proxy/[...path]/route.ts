@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 const STATE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const TOKEN_COOKIE = "fairswarm_access_token";
 const REFRESH_COOKIE = "fairswarm_refresh_token";
-const CSRF_COOKIE = "fairswarm_csrf_token";
+const CSRF_COOKIE = "csrf_token";
 
 function backendBaseUrl(): string {
   return (
@@ -102,65 +102,81 @@ async function proxyRequest(request: NextRequest, pathParts: string[]) {
     }
   }
 
-  const upstream = await fetch(targetUrl, {
-    method: request.method,
-    headers,
-    body,
-    redirect: "manual",
-  });
+  try {
+    const upstream = await fetch(targetUrl, {
+      method: request.method,
+      headers,
+      body,
+      redirect: "manual",
+    });
 
-  const upstreamType = upstream.headers.get("content-type") ?? "";
+    const upstreamType = upstream.headers.get("content-type") ?? "";
 
-  if (isAuthPath(targetPath)) {
-    const payload = upstreamType.includes("application/json") ? await upstream.json() : {};
-    const safePayload = { ...(payload as Record<string, unknown>) };
-    delete safePayload.access_token;
-    delete safePayload.refresh_token;
-    delete safePayload.csrf_token;
+    if (isAuthPath(targetPath)) {
+      const payload = upstreamType.includes("application/json") ? await upstream.json() : {};
+      const safePayload = { ...(payload as Record<string, unknown>) };
+      delete safePayload.access_token;
+      delete safePayload.refresh_token;
+      delete safePayload.csrf_token;
 
-    const response = NextResponse.json(safePayload, { status: upstream.status });
+      const response = NextResponse.json(safePayload, { status: upstream.status });
 
-    if (upstream.ok && (targetPath === "auth/login" || targetPath === "auth/register" || targetPath === "auth/refresh")) {
-      applyAuthCookies(response, payload as Record<string, unknown>);
+      if (upstream.ok && (targetPath === "auth/login" || targetPath === "auth/register" || targetPath === "auth/refresh")) {
+        applyAuthCookies(response, payload as Record<string, unknown>);
+      }
+
+      if (upstream.ok && targetPath === "auth/logout") {
+        clearAuthCookies(response);
+      }
+
+      return response;
     }
 
-    if (upstream.ok && targetPath === "auth/logout") {
-      clearAuthCookies(response);
+    const buffer = await upstream.arrayBuffer();
+    const response = new NextResponse(buffer, { status: upstream.status });
+
+    const passHeaders = ["content-type", "content-disposition", "cache-control"];
+    for (const header of passHeaders) {
+      const value = upstream.headers.get(header);
+      if (value) {
+        response.headers.set(header, value);
+      }
     }
 
     return response;
-  }
-
-  const buffer = await upstream.arrayBuffer();
-  const response = new NextResponse(buffer, { status: upstream.status });
-
-  const passHeaders = ["content-type", "content-disposition", "cache-control"];
-  for (const header of passHeaders) {
-    const value = upstream.headers.get(header);
-    if (value) {
-      response.headers.set(header, value);
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.error("[proxyRequest] Fetch error:", error);
     }
+    return NextResponse.json(
+      { detail: "Backend service is unreachable." },
+      { status: 502 }
+    );
   }
-
-  return response;
 }
 
-export async function GET(request: NextRequest, context: { params: { path: string[] } }) {
-  return proxyRequest(request, context.params.path);
+
+export async function GET(request: NextRequest, context: { params: Promise<{ path: string[] }> | { path: string[] } }) {
+  const resolvedParams = await context.params;
+  return proxyRequest(request, resolvedParams.path);
 }
 
-export async function POST(request: NextRequest, context: { params: { path: string[] } }) {
-  return proxyRequest(request, context.params.path);
+export async function POST(request: NextRequest, context: { params: Promise<{ path: string[] }> | { path: string[] } }) {
+  const resolvedParams = await context.params;
+  return proxyRequest(request, resolvedParams.path);
 }
 
-export async function PUT(request: NextRequest, context: { params: { path: string[] } }) {
-  return proxyRequest(request, context.params.path);
+export async function PUT(request: NextRequest, context: { params: Promise<{ path: string[] }> | { path: string[] } }) {
+  const resolvedParams = await context.params;
+  return proxyRequest(request, resolvedParams.path);
 }
 
-export async function PATCH(request: NextRequest, context: { params: { path: string[] } }) {
-  return proxyRequest(request, context.params.path);
+export async function PATCH(request: NextRequest, context: { params: Promise<{ path: string[] }> | { path: string[] } }) {
+  const resolvedParams = await context.params;
+  return proxyRequest(request, resolvedParams.path);
 }
 
-export async function DELETE(request: NextRequest, context: { params: { path: string[] } }) {
-  return proxyRequest(request, context.params.path);
+export async function DELETE(request: NextRequest, context: { params: Promise<{ path: string[] }> | { path: string[] } }) {
+  const resolvedParams = await context.params;
+  return proxyRequest(request, resolvedParams.path);
 }

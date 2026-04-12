@@ -174,23 +174,25 @@ ALTER TABLE runtime_config ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own data" ON users FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can update own data" ON users FOR UPDATE USING (auth.uid() = id);
 
-CREATE POLICY "Users can manage own datasets" ON datasets FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage own datasets" ON datasets FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can manage own analyses" ON analyses FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage own analyses" ON analyses FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- Since reports and results are tied to analysis which is tied to the user, we join check
 CREATE POLICY "Users can view own bias reports" ON bias_reports FOR SELECT 
 USING (EXISTS (SELECT 1 FROM analyses WHERE analyses.id = bias_reports.analysis_id AND analyses.user_id = auth.uid()));
 
 CREATE POLICY "Users can manage own bias reports" ON bias_reports FOR ALL
-USING (EXISTS (SELECT 1 FROM analyses WHERE analyses.id = bias_reports.analysis_id AND analyses.user_id = auth.uid()));
+USING (EXISTS (SELECT 1 FROM analyses WHERE analyses.id = bias_reports.analysis_id AND analyses.user_id = auth.uid()))
+WITH CHECK (EXISTS (SELECT 1 FROM analyses WHERE analyses.id = bias_reports.analysis_id AND analyses.user_id = auth.uid()));
 
 CREATE POLICY "Users can view own ai swarm results" ON ai_swarm_results FOR SELECT 
 USING (EXISTS (SELECT 1 FROM analyses WHERE analyses.id = ai_swarm_results.analysis_id AND analyses.user_id = auth.uid()));
 
 CREATE POLICY "Users can manage own ai swarm results" ON ai_swarm_results FOR ALL
-USING (EXISTS (SELECT 1 FROM analyses WHERE analyses.id = ai_swarm_results.analysis_id AND analyses.user_id = auth.uid()));
+USING (EXISTS (SELECT 1 FROM analyses WHERE analyses.id = ai_swarm_results.analysis_id AND analyses.user_id = auth.uid()))
+WITH CHECK (EXISTS (SELECT 1 FROM analyses WHERE analyses.id = ai_swarm_results.analysis_id AND analyses.user_id = auth.uid()));
 
 CREATE POLICY "Users can view own token blocklist" ON token_blocklist FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can manage own refresh tokens" ON refresh_tokens FOR ALL USING (auth.uid() = user_id);
-CREATE POLICY "Users can manage own rate limit counters" ON rate_limit_counters FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage own refresh tokens" ON refresh_tokens FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can manage own rate limit counters" ON rate_limit_counters FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: fairswarm-backend
+    env: docker
+    region: oregon # or frankfurt, ohio, singapore
+    plan: free # or standard for better performance
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: PORT
+        value: "8000"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ENVIRONMENT
+        value: "production"
