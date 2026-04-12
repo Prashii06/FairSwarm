@@ -1847,7 +1847,7 @@ POST /ai/triage          Run swarm analysis`}
                 {
                   Icon: Mail,
                   title: "Email",
-                  value: "fairswarm.team@gmail.com",
+                  value: "ankitkr.ak07@gmail.com",
                   action: copyEmail,
                   kind: "button" as const,
                 },
@@ -1862,7 +1862,7 @@ POST /ai/triage          Run swarm analysis`}
                   Icon: Globe,
                   title: "Live Demo",
                   value: "fairswarm.vercel.app",
-                  href: "https://fairswarm.vercel.app",
+                  href: "https://fair-swarm.vercel.app",
                   kind: "link" as const,
                 },
                 {
@@ -2091,7 +2091,7 @@ POST /ai/triage          Run swarm analysis`}
           <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <p className={`${plusJakarta.className} mb-3 text-sm font-bold text-white`}>Product</p>
-              <div className="space-y-2 text-sm">
+              <div className="flex flex-col space-y-2 text-sm">
                 <a href="#features">Features</a>
                 <a href="#how-it-works">How It Works</a>
                 <a href="#ai-models">AI Models</a>
@@ -2103,7 +2103,7 @@ POST /ai/triage          Run swarm analysis`}
 
             <div>
               <p className={`${plusJakarta.className} mb-3 text-sm font-bold text-white`}>Resources</p>
-              <div className="space-y-2 text-sm">
+              <div className="flex flex-col space-y-2 text-sm">
                 <a href="#documentation">Documentation</a>
                 <a href="#documentation">API Reference</a>
                 <a href="#doc-quickstart">Quick Start</a>
@@ -2117,7 +2117,7 @@ POST /ai/triage          Run swarm analysis`}
 
             <div>
               <p className={`${plusJakarta.className} mb-3 text-sm font-bold text-white`}>Company</p>
-              <div className="space-y-2 text-sm">
+              <div className="flex flex-col space-y-2 text-sm">
                 <a href="#hero">About FairSwarm</a>
                 <a href="#impact">SDG Impact</a>
                 <a href="#testimonials">Testimonials</a>
@@ -2135,7 +2135,7 @@ POST /ai/triage          Run swarm analysis`}
 
             <div>
               <p className={`${plusJakarta.className} mb-3 text-sm font-bold text-white`}>Built With</p>
-              <div className="space-y-2 text-sm text-slate-400">
+              <div className="flex flex-col space-y-2 text-sm text-slate-400">
                 <p>Next.js 15 · FastAPI · Supabase</p>
                 <p>IBM AIF360 · Fairlearn</p>
                 <p>NVIDIA NIM · Google Gemini</p>
