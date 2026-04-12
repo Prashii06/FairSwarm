@@ -8,6 +8,7 @@ const CSRF_COOKIE = "csrf_token";
 function backendBaseUrl(): string {
   return (
     process.env.BACKEND_INTERNAL_URL ??
+    process.env.NEXT_PUBLIC_API_URL ??
     process.env.NEXT_PUBLIC_API_BASE_URL ??
     "http://localhost:8000/api/v1"
   ).replace(/\/$/, "");
@@ -84,6 +85,11 @@ async function proxyRequest(request: NextRequest, pathParts: string[]) {
   const accessToken = request.cookies.get(TOKEN_COOKIE)?.value;
   if (accessToken) {
     headers.set("authorization", `Bearer ${accessToken}`);
+  }
+
+  const csrfCookieVal = request.cookies.get(CSRF_COOKIE)?.value;
+  if (csrfCookieVal) {
+    headers.append("cookie", `${CSRF_COOKIE}=${csrfCookieVal}`);
   }
 
   let body: BodyInit | undefined;
